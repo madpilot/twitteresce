@@ -6,39 +6,18 @@ import javax.microedition.lcdui.*;
 public class TwitteresceThread extends Thread  {
 	private Twitteresce parent;
 	private TwitterAPI api;
-	private int refresh;
-	private String mode;
+	
 	private Display display;
-	private boolean running;
-	
-	public TwitteresceThread(Display display, int refresh, String mode, boolean running, Twitteresce parent) {
+		
+	public TwitteresceThread(Display display, Twitteresce parent) {
 		this.parent = parent;
-		this.api = new TwitterAPI("myles@madpilot.com.au", "Ffe3wtEt");
+		
+		this.api = new TwitterAPI(parent.getSettings().getUsername(), parent.getSettings().getPassword());
 		this.display = display;
-		this.refresh = refresh;
-		this.mode = mode;
-		this.running = running;
-	}
-	
-	public TwitteresceThread(Display display, String mode, Twitteresce parent) {
-		this.parent = parent;
-		this.api = new TwitterAPI("myles@madpilot.com.au", "Ffe3wtEt");
-		this.display = display;
-		this.refresh = 0;
-		this.mode = mode;
-		this.running = false;
-	}
-	
-	public String getMode() {
-		return this.mode;
-	}
-	
-	public void setMode(String mode) {
-		this.mode = mode;
 	}
 	
 	public void Retrieve() {
-		if(this.mode == "friends") {
+		if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_FRIENDS) {
 			try {
 				Vector statuses = this.api.FriendsTimeLine();
 				// Let's try displaying in labels to see if it is working
@@ -48,7 +27,7 @@ public class TwitteresceThread extends Thread  {
 			} catch(IOException ioe) {
 			
 			}
-		} else if (this.mode == "public") {
+		} else if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_PUBLIC) {
 			try {
 				Vector statuses = this.api.PublicTimeLine();
 				// Let's try displaying in labels to see if it is working
@@ -65,10 +44,10 @@ public class TwitteresceThread extends Thread  {
 		// Run once, then loop if needed.
 		Retrieve();
 		
-		while(running) {
+		while(this.parent.getSettings().getAutomatic()) {
 			Retrieve();
 			try {
-				this.sleep(this.refresh * 1000 * 60);
+				this.sleep(this.parent.getSettings().getRefreshRate() * 1000 * 60);
 			} catch (InterruptedException ie) {
 			
 			}

@@ -1,8 +1,9 @@
 MIDlet-1: Twitteresce, Twitteresce.png, Twitteresce
-MIDlet-Jar-Size: 56251
+MIDlet-Description: Midlet for accessing Twitter from a mobile phone
+MIDlet-Jar-Size: 60245
 MIDlet-Jar-URL: Twitteresce.jar
 MIDlet-Name: Twitteresce
 MIDlet-Vendor: MadPilot Productions
 MIDlet-Version: 1.0
-MicroEdition-Configuration: CLDC-1.1
-MicroEdition-Profile: MIDP-2.1
+MicroEdition-Configuration: CLDC-1.0
+MicroEdition-Profile: MIDP-2.0
