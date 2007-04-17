@@ -1,11 +1,11 @@
 import java.util.*;
+import java.lang.Math.*;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
 
 public class Twitteresce extends MIDlet implements CommandListener {
-	private TwitteresceThread displayThread;
-	
 	private TwitteresceSettings settings;
+	private TwitteresceThread displayThread;
 	
 	private Vector statuses;
 	
@@ -51,17 +51,25 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		cmdSendCancel = new Command("Cancel", Command.BACK, 1);
 		
 		cmdReadTweetBack = new Command("Back", Command.BACK, 1);
-		
-		displayThread = new TwitteresceThread(Display.getDisplay(this), this);
 	}
 	
 	public void startApp() {
-		Display display = Display.getDisplay(this);
-		Form loading = new Form("Twitteresce");
-		loading.append("Loading...");
-		display.setCurrent(loading);
-		
-		this.displayThread.start();
+		if(this.settings.getInitialised()) {
+			Display display = Display.getDisplay(this);
+			
+			Alert loading = new Alert("Please wait", "Retrieving current tweets...", null, AlertType.INFO);
+			Gauge gauge = new Gauge(null, false, Gauge.INDEFINITE, Gauge.CONTINUOUS_RUNNING);
+			loading.setIndicator(gauge);
+			loading.setTimeout(1000 * 600); // Set the time out really large - once a new displayable is setup this will go away
+			
+			display.setCurrent(loading);
+			
+			this.displayThread = new TwitteresceThread(Display.getDisplay(this), this);
+			this.displayThread.start();
+		} else {
+			// no settings yet - needs to be initialised
+			DisplaySettings();
+		}
 	}
 		
 	
@@ -76,7 +84,30 @@ public class Twitteresce extends MIDlet implements CommandListener {
 	
 	// This will get called by the running thread
 	public void DisplayTwits(Vector statuses, String title) {
+		// First we will check to see if it there are new tweets
+		int newTweets = 0;
+		
+		if(this.statuses == null) {
+			newTweets = statuses.size();
+		} else {
+			if(!statuses.isEmpty()) {
+				if(this.statuses.size() != statuses.size()) {
+					newTweets = Math.max(0, statuses.size() - this.statuses.size());
+				} else {
+					if(this.statuses.isEmpty()) {
+						newTweets = statuses.size();
+					} else {
+						Enumeration e = statuses.elements();
+						while(e.hasMoreElements() && ((Status)e.nextElement()).getID() != ((Status)this.statuses.firstElement()).getID()) {
+							newTweets++;
+						}
+					}
+				}
+			}
+		}
+		
 		this.statuses = statuses;
+		
 		Display display = Display.getDisplay(this);
 		
 		list = new List(title, Choice.IMPLICIT);
@@ -98,6 +129,15 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		
 		list.setCommandListener(this);
 		
+		
+		if(newTweets > 0) {
+			/*
+			Alert newTweetAlert = new Alert("New Tweets", "There are " + newTweets + " new tweets", null, AlertType.INFO);
+			display.setCurrent(newTweetAlert);
+			display.vibrate(1);
+			display.flashBacklight(1);
+			*/
+		}
 		display.setCurrent(list);
 	}
 	
@@ -165,9 +205,8 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		}
 		else if (c == cmdRefresh) 
 		{
-			// Refresh the display again by creating and running a new thread
-			TwitteresceThread refreshThread = new TwitteresceThread(Display.getDisplay(this), this);
-			refreshThread.start();
+			// Refresh the display again by creating and running a new thread (in one shot mode)
+			(new TwitteresceThread(Display.getDisplay(this), this, true)).start();
 		}
 		else if (c == cmdUpdate || c == cmdPostAt) 	
 		{
@@ -185,14 +224,9 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		else if (c == cmdSend)
 		{
 			TextBox textBox = (TextBox)s;
-			UpdateThread updateThread = new UpdateThread(textBox.getString());
+			UpdateThread updateThread = new UpdateThread(textBox.getString(), this);
 			updateThread.start();
-			
-			Display display = Display.getDisplay(this);
-			display.setCurrent(list);
-			
-			TwitteresceThread refreshThread = new TwitteresceThread(Display.getDisplay(this), this);
-			refreshThread.start();
+			// The thread takes care of the alert gauge and the refreshing of the list...
 		}
 		else if (c == cmdSendCancel)
 		{
@@ -216,12 +250,24 @@ public class Twitteresce extends MIDlet implements CommandListener {
 			
 			settings.setUsername(txtUsername.getString());
 			settings.setPassword(txtPassword.getString());
-			settings.setAutomatic(choiceTimeline.getSelectedIndex() == 1);
-			
+			settings.setTimelineMode(choiceTimeline.getSelectedIndex());
+			settings.setAutomatic(choiceAutomatic.getSelectedIndex() == 1);
 			settings.setRefreshRate(Integer.parseInt(txtRefreshRate.getString()));
+			try {
+				settings.save();
+			} catch (javax.microedition.rms.RecordStoreException rse) {
+				
+			}
 			
 			Display display = Display.getDisplay(this);
-			display.setCurrent(list);
+						
+			if(this.displayThread == null) {
+				this.displayThread = new TwitteresceThread(display, this);
+				this.displayThread.start();
+			}
+			
+			// Need to fire a one shot to show the update alert.
+			(new TwitteresceThread(Display.getDisplay(this), this, true)).start();
 		}
 		else if (c == cmdReadTweet)
 		{
