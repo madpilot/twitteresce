@@ -98,6 +98,6 @@ public class TwitteresceThread extends Thread  {
 			
 			}
 		} 
-		while(!this.oneShot && this.parent.getSettings().getAutomatic());
+		while(!this.oneShot && this.parent.getSettings().getRefreshRate() > 0 && this.parent.getSettings().getAutomatic());
 	}
 }

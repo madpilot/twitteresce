@@ -4,10 +4,10 @@ MIDlet-Description: Midlet for accessing Twitter from a mobile phone
 MIDlet-Icon: /icons/twitter.png
 MIDlet-Info-URL: http://www.madpilot.com.au/twitteresce
 MIDlet-Install-Notify: http://www.madpilot.com.au/twitteresce/install
-MIDlet-Jar-Size: 64641
+MIDlet-Jar-Size: 66787
 MIDlet-Jar-URL: Twitteresce.jar
 MIDlet-Name: Twitteresce
 MIDlet-Vendor: MadPilot Productions
-MIDlet-Version: 0.1
+MIDlet-Version: 0.2
 MicroEdition-Configuration: CLDC-1.0
 MicroEdition-Profile: MIDP-2.0
