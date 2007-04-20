@@ -8,14 +8,18 @@ public class Twitteresce extends MIDlet implements CommandListener {
 	private TwitteresceThread displayThread;
 	
 	private Vector statuses;
+	private String title;
 	
 	// For the main tweets window
 	private Command cmdReadTweet;
 	private Command cmdPostAt;
+	private Command cmdDirectAt;
 	private Command cmdUpdate;
 	private Command cmdRefresh;
 	private Command cmdSettings;
 	private Command cmdExit;
+	private Command cmdDirect;
+	private Command cmdTimeline;
 	
 	// For Sessions
 	private Command cmdSettingsOK;
@@ -28,7 +32,7 @@ public class Twitteresce extends MIDlet implements CommandListener {
 	// For Reading Tweets
 	private Command cmdReadTweetBack;
 	
-	private List list;
+	public List list;
 	
 	public TwitteresceSettings getSettings() {
 		return this.settings;
@@ -38,8 +42,9 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		settings = TwitteresceSettings.getSettings();
 		
 		cmdReadTweet = new Command("Read", Command.ITEM, 1);
-		cmdUpdate = new Command("Post Update", Command.ITEM, 1);
+		cmdUpdate = new Command("Post Tweet", Command.ITEM, 1);
 		cmdPostAt = new Command("Post at User", Command.ITEM, 1);
+		cmdDirectAt = new Command("Direct Message User", Command.ITEM, 1);
 		cmdRefresh = new Command("Refresh", Command.ITEM, 1);
 		cmdSettings = new Command("Settings", Command.ITEM, 1);
 		cmdExit = new Command("Exit", Command.EXIT, 1);
@@ -51,6 +56,15 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		cmdSendCancel = new Command("Cancel", Command.BACK, 1);
 		
 		cmdReadTweetBack = new Command("Back", Command.BACK, 1);
+		
+		cmdDirect = new Command("Direct Messages", Command.ITEM, 1);
+		cmdTimeline = new Command("Back to timeline", Command.ITEM, 1);
+		
+		// Initialise some variables so if there are errors, we can display stuff
+		statuses = new Vector();
+		title = "Twitteresce";
+		
+		list = new List(title, Choice.IMPLICIT);
 	}
 	
 	public void startApp() {
@@ -79,7 +93,33 @@ public class Twitteresce extends MIDlet implements CommandListener {
 	
 	public void destroyApp(boolean unconditional) {
 		list = null;
-		statuses = null;
+	}
+	
+	public void DisplayDirectMessages(Vector messages) {
+		Display display = Display.getDisplay(this);
+		
+		list = new List("Twitteresce - Direct messages", Choice.IMPLICIT);
+		list.setFitPolicy(Choice.TEXT_WRAP_ON);
+		
+		for(int i = 0; i < messages.size(); i++) {
+			DirectMessage message = (DirectMessage)messages.elementAt(i);
+			list.append(message.getSenderScreenName() + ": " + message.getText(), null);
+		}
+		
+		list.setSelectCommand(cmdReadTweet);
+		
+		list.addCommand(cmdDirectAt);
+		list.addCommand(cmdRefresh);
+		list.addCommand(cmdExit);
+		
+		list.setCommandListener(this);
+		
+		display.setCurrent(list);
+	}
+		
+	// Basically refreshes the last screen
+	public void DisplayTwits() {
+		this.DisplayTwits(this.statuses, this.title);
 	}
 	
 	// This will get called by the running thread
@@ -107,6 +147,7 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		}
 		
 		this.statuses = statuses;
+		this.title = title;
 		
 		Display display = Display.getDisplay(this);
 		
@@ -123,22 +164,26 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		list.addCommand(cmdReadTweet);
 		list.addCommand(cmdUpdate);
 		list.addCommand(cmdPostAt);
+		//list.addCommand(cmdDirectAt);
 		list.addCommand(cmdRefresh);
+		//list.addCommand(cmdDirect);
 		list.addCommand(cmdSettings);
 		list.addCommand(cmdExit);
 		
 		list.setCommandListener(this);
 		
+		display.setCurrent(list);
 		
 		if(newTweets > 0) {
-			/*
 			Alert newTweetAlert = new Alert("New Tweets", "There are " + newTweets + " new tweets", null, AlertType.INFO);
-			display.setCurrent(newTweetAlert);
+			try {
+				display.setCurrent(newTweetAlert, list);
+			} catch(IllegalArgumentException iae) {
+			
+			}
 			display.vibrate(1);
 			display.flashBacklight(1);
-			*/
 		}
-		display.setCurrent(list);
 	}
 	
 	public void DisplayUpdate(String initial) {
@@ -172,21 +217,52 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		choiceTimeline.setSelectedIndex(this.settings.getTimelineMode(), true);
 		
 		// Item #4
-		ChoiceGroup choiceAutomatic = new ChoiceGroup("Refresh", ChoiceGroup.EXCLUSIVE);
+		ChoiceGroup choiceRefreshRate = new ChoiceGroup("Automatically retrieve tweets?", ChoiceGroup.EXCLUSIVE);
 		// This will be 0
-		choiceAutomatic.append("Manually", null); 
+		choiceRefreshRate.append("No", null); 
 		// This will be 1
-		choiceAutomatic.append("Automatically", null);
-		choiceAutomatic.setSelectedIndex(this.settings.getAutomatic() ? 1 : 0, true);
+		choiceRefreshRate.append("Every minute", null);
+		// This will be 2
+		choiceRefreshRate.append("Every 2 minutes", null);
+		// This will be 3
+		choiceRefreshRate.append("Every 5 minutes", null);
+		// This will be 4
+		choiceRefreshRate.append("Every 10 minutes", null);
+		// This will be 5
+		choiceRefreshRate.append("Every 30 minutes", null);
+		// This will be 6
+		choiceRefreshRate.append("Every hour", null);
 		
-		// Item #5
-		TextField txtRefreshRate = new TextField("Minutes between update", new Integer(this.settings.getRefreshRate()).toString(), 3, TextField.NUMERIC);
+		int selected = 0;
+		switch (this.settings.getRefreshRate()) {
+			case 1:
+				selected = 1;
+				break;
+			case 2:
+				selected = 2;
+				break;
+			case 5:
+				selected = 3;
+				break;
+			case 10:
+				selected = 4;
+				break;
+			case 30:
+				selected = 5;
+				break;
+			case 60:
+				selected = 6;
+				break;
+			default:
+				selected = 0;
+		}
+		
+		choiceRefreshRate.setSelectedIndex(selected, true);
 		
 		form.append(txtUsername);
 		form.append(txtPassword);
 		form.append(choiceTimeline);
-		form.append(choiceAutomatic);
-		form.append(txtRefreshRate);
+		form.append(choiceRefreshRate);
 		
 		form.addCommand(cmdSettingsOK);
 		form.addCommand(cmdSettingsCancel);
@@ -219,6 +295,11 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		}
 		else if (c == cmdSettings) 
 		{
+			try {
+				this.settings.read();
+			} catch(javax.microedition.rms.RecordStoreException rse) {
+			
+			}
 			DisplaySettings();
 		}
 		else if (c == cmdSend)
@@ -240,34 +321,58 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		}
 		else if (c == cmdSettingsOK)
 		{
+			Display display = Display.getDisplay(this);
+			display.setCurrent(list);
+			
 			Form settingsForm = (Form)s;
 			
 			TextField txtUsername = (TextField)settingsForm.get(0);
 			TextField txtPassword = (TextField)settingsForm.get(1);
 			ChoiceGroup choiceTimeline = (ChoiceGroup)settingsForm.get(2);
-			ChoiceGroup choiceAutomatic = (ChoiceGroup)settingsForm.get(3);
-			TextField txtRefreshRate = (TextField)settingsForm.get(4);
+			ChoiceGroup choiceRefreshRate = (ChoiceGroup)settingsForm.get(3);
 			
 			settings.setUsername(txtUsername.getString());
 			settings.setPassword(txtPassword.getString());
 			settings.setTimelineMode(choiceTimeline.getSelectedIndex());
-			settings.setAutomatic(choiceAutomatic.getSelectedIndex() == 1);
-			settings.setRefreshRate(Integer.parseInt(txtRefreshRate.getString()));
+			
+			switch(choiceRefreshRate.getSelectedIndex()) {
+				case 1:
+					settings.setRefreshRate(1);
+					break;
+				case 2:
+					settings.setRefreshRate(2);
+					break;
+				case 3:
+					settings.setRefreshRate(5);
+					break;
+				case 4:
+					settings.setRefreshRate(10);
+					break;
+				case 5:
+					settings.setRefreshRate(30);
+					break;
+				case 6:
+					settings.setRefreshRate(60);
+					break;
+				default:
+					settings.setRefreshRate(0);
+			}
+			
 			try {
 				settings.save();
 			} catch (javax.microedition.rms.RecordStoreException rse) {
 				
 			}
-			
-			Display display = Display.getDisplay(this);
-						
-			if(this.displayThread == null) {
+									
+			if(this.displayThread == null || (!this.displayThread.isAlive() && this.settings.getRefreshRate() != 0)) {
+				// Launch a new thread if it doesn't exist or the refresh rate is greater than 0
 				this.displayThread = new TwitteresceThread(display, this);
 				this.displayThread.start();
+			} else {
+				// Need to fire a one shot to show the update alert.
+				this.displayThread = new TwitteresceThread(Display.getDisplay(this), this, true);
+				this.displayThread.start();
 			}
-			
-			// Need to fire a one shot to show the update alert.
-			(new TwitteresceThread(Display.getDisplay(this), this, true)).start();
 		}
 		else if (c == cmdReadTweet)
 		{
@@ -285,6 +390,24 @@ public class Twitteresce extends MIDlet implements CommandListener {
 		}
 		else if (c == cmdReadTweetBack)
 		{
+			Display display = Display.getDisplay(this);
+			display.setCurrent(list);
+		}
+		else if (c == cmdDirect) 
+		{
+			this.settings.setTimelineMode(TwitteresceSettings.MODE_DIRECT);
+			this.settings.setRefreshRate(0);
+			
+			this.displayThread = new TwitteresceThread(Display.getDisplay(this), this, true);
+			this.displayThread.start();
+		}
+		else if (c == cmdTimeline) 
+		{
+			try {
+				this.settings.read();
+			} catch(javax.microedition.rms.RecordStoreException rse) {
+			
+			}
 			Display display = Display.getDisplay(this);
 			display.setCurrent(list);
 		}

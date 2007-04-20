@@ -3,6 +3,7 @@ import javax.microedition.rms.*;
 public class TwitteresceSettings {
 	public static final int MODE_PUBLIC = 0;
 	public static final int MODE_FRIENDS = 1;
+	public static final int MODE_DIRECT = 2;
 		
 	private boolean initialised;
 	private String username;
@@ -168,7 +169,6 @@ public class TwitteresceSettings {
 			}
 		}
 		
-		// Always needs to be in this order
 		byte[] bUsername = ("username:" + getUsername()).getBytes();
 		byte[] bPassword = ("password:" + getPassword()).getBytes();
 		byte[] bRefreshRate = ("refreshrate:" + (new Integer(getRefreshRate())).toString()).getBytes();

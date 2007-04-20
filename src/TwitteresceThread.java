@@ -32,15 +32,7 @@ public class TwitteresceThread extends Thread  {
 	public void Retrieve() 
 	{
 		try 
-		{
-			if(this.oneShot) {
-				Alert refreshing = new Alert("Please wait", "Retrieving current tweets...", null, AlertType.INFO);
-				Gauge gauge = new Gauge(null, false, Gauge.INDEFINITE, Gauge.CONTINUOUS_RUNNING);
-				refreshing.setIndicator(gauge);
-				refreshing.setTimeout(1000 * 600); // Set the time out really large - once a new displayable is setup this will go away
-				this.display.setCurrent(refreshing);
-			}
-			
+		{			
 			if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_FRIENDS) 
 			{						
 				Vector statuses = this.api.FriendsTimeLine();
@@ -53,39 +45,62 @@ public class TwitteresceThread extends Thread  {
 				// Let's try displaying in labels to see if it is working
 				this.parent.DisplayTwits(statuses, "Twitteresce - Public");
 			}
+			else if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_DIRECT) 
+			{
+				Vector messages = this.api.DirectMessages();
+				// Let's try displaying in labels to see if it is working
+				this.parent.DisplayDirectMessages(messages);
+			}
 		}
 		catch(HTTPIOException hie) 
 		{
 			// Only display an error on a one shot
-			if(this.oneShot) 
+			this.parent.DisplayTwits();
+			
+			Alert error = new Alert("Can't get updates", "Twitter is unavailable, please try again later", null, AlertType.ERROR);
+			
+			if(hie.getHttpCode() == HttpConnection.HTTP_FORBIDDEN || hie.getHttpCode() == HttpConnection.HTTP_UNAUTHORIZED)
 			{
-				Alert error = new Alert("Can't get updates", "Please try again later", null, AlertType.ERROR);
-				if(hie.getHttpCode() == HttpConnection.HTTP_FORBIDDEN) 
-				{
-					error = new Alert("You aren't allowed to get updated", "Please check your username and password", null, AlertType.ERROR);
-				}
-				else if(hie.getHttpCode() == HttpConnection.HTTP_INTERNAL_ERROR) 
-				{
-					error = new Alert("Can't get updates", "The server is down, please try again later", null, AlertType.ERROR);
-				}
-				
-				this.display.setCurrent(error);
+				error = new Alert("You aren't allowed to get updated", "It looks like your username or password is incorrect", null, AlertType.ERROR);
+			}
+			
+			try {
+				this.display.setCurrent(error, this.parent.list);
+			} catch(IllegalArgumentException iae) {
+				// Another thread has slipped in between the DisplayTwits call above and here.
 			}
 		}
-		catch(IOException ioe)
-		{
-			if(this.oneShot) 
-			{
-				Alert error = new Alert("Can't get updates", "Please try again later", null, AlertType.ERROR);
-				this.display.setCurrent(error);
+		catch(Exception e)
+		{	
+			this.parent.DisplayTwits();
+			
+			Alert error = new Alert("Can't get updates", "Twitter is unavailable, please try again later", null, AlertType.ERROR);
+			
+			try {
+				this.display.setCurrent(error, this.parent.list);
+			} catch(IllegalArgumentException iae) {
+				
 			}
 		}
 	}
 		
 	public void run() 
 	{
-		// Run once, then keep running if continuous, otherwise return.
-		do 
+		// Always show the gauge on the first run
+		this.parent.DisplayTwits();
+				
+		Alert refreshing = new Alert("Please wait", "Retrieving current tweets...", null, AlertType.INFO);
+		Gauge gauge = new Gauge(null, false, Gauge.INDEFINITE, Gauge.CONTINUOUS_RUNNING);
+		refreshing.setIndicator(gauge);
+		refreshing.setTimeout(1000 * 600); // Set the time out really large - once a new displayable is setup this will go away
+		
+		try {
+			this.display.setCurrent(refreshing);
+		} catch(IllegalArgumentException iae) {
+		
+		}
+		
+		do
 		{
 			Retrieve();
 			// Sleep for a bit
@@ -97,7 +112,7 @@ public class TwitteresceThread extends Thread  {
 			{
 			
 			}
-		} 
-		while(!this.oneShot && this.parent.getSettings().getRefreshRate() > 0 && this.parent.getSettings().getAutomatic());
+		}
+		while(!this.oneShot && this.parent.getSettings().getRefreshRate() > 0);
 	}
 }
