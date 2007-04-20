@@ -102,13 +102,13 @@ public class TwitterAPI {
 					}
 				}
 			}
-		} else if (root.getName().compareTo("direct_message") == 0) {
+		} else if (root.getName().compareTo("direct-messages") == 0) {
 			for(int i = 0; i < root.getChildCount(); i++) 
 			{
 				if(root.getType(i) == Node.ELEMENT) {
 					Element child1 = (Element)root.getChild(i);
 					
-					if(child1.getName().compareTo("user") == 0)
+					if(child1.getName().compareTo("direct_message") == 0)
 					{
 						returnCollection.addElement(new DirectMessage(child1));
 					}
