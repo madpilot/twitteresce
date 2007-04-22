@@ -43,27 +43,14 @@ public class UpdateThread extends Thread  {
 			
 			this.api.Update(this.message);
 			
-			if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_FRIENDS) 
-			{						
-				Vector statuses = this.api.FriendsTimeLine();
-				TweetsView tweetsView = new TweetsView(this.parent);
-				tweetsView.display(statuses);
-				this.parent.setDefaultView(tweetsView);
-			} 
-			else if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_PUBLIC) 
-			{
-				Vector statuses = this.api.PublicTimeLine();
-				TweetsView tweetsView = new TweetsView(this.parent);
-				tweetsView.display(statuses);
-				this.parent.setDefaultView(tweetsView);
-			}
-			else if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_DIRECT) 
-			{
-				/*
-				Vector messages = this.api.DirectMessages();
-				// Let's try displaying in labels to see if it is working
-				this.parent.DisplayDirectMessages(messages);
-				*/
+			// Refresh the timeline
+			this.parent.displayDefaultView();
+			this.parent.timerThread = new Timer();
+			
+			if(this.parent.getSettings().getRefreshRate() == 0) {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date());
+			} else {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date(), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
 			}
 		} catch(HTTPIOException hie) {
 			// This will restore the last tweet screen ensuring the Alert is displayed.
@@ -81,20 +68,10 @@ public class UpdateThread extends Thread  {
 			} catch(IllegalArgumentException iae) {
 				// Another thread has slipped in between the DisplayTwits call above and here.
 			}
-		} catch(IOException ioe) {
-			this.parent.displayDefaultView();
-			
-			Alert error = new Alert("Can't send the update", "Please try again later", null, AlertType.ERROR);
-			
-			try {
-				Display.getDisplay(this.parent).setCurrent(error, this.parent.getDefaultView().getDisplayable());
-			} catch(IllegalArgumentException iae) {
-				
-			}
 		} catch(Exception e) {
 			this.parent.displayDefaultView();
 			
-			Alert error = new Alert("Oops!", "Unknown error, please contact the dev team.", null, AlertType.ERROR);
+			Alert error = new Alert("Can't send the update", "Please try again later", null, AlertType.ERROR);
 			
 			try {
 				Display.getDisplay(this.parent).setCurrent(error, this.parent.getDefaultView().getDisplayable());

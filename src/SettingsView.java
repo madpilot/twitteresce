@@ -127,15 +127,14 @@ public class SettingsView implements View, CommandListener {
 		} catch (javax.microedition.rms.RecordStoreException rse) {
 			
 		}
-						
-		if(this.parent.displayThread == null || (!this.parent.displayThread.isAlive() && this.parent.getSettings().getRefreshRate() != 0)) {
-			// Launch a new thread if it doesn't exist or the refresh rate is greater than 0
-			this.parent.displayThread = new TwitteresceThread(this.parent);
-			this.parent.displayThread.start();
+		
+		this.parent.timerThread.cancel();
+		this.parent.timerThread = new Timer();
+		
+		if(this.parent.getSettings().getRefreshRate() == 0) {
+			this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date());
 		} else {
-			// Need to fire a one shot to show the update alert.
-			this.parent.displayThread = new TwitteresceThread(this.parent, true);
-			this.parent.displayThread.start();
+			this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date(), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
 		}
 	}
 	
@@ -147,10 +146,24 @@ public class SettingsView implements View, CommandListener {
 		if(c == cmdOK) 
 		{
 			this.save((Form)s);
+			
+			this.parent.timerThread = new Timer();
+			// Restart the timer if the refresh rate has been changed
+			if(this.parent.getSettings().getRefreshRate() == 0) {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date());
+			} else {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date(), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
+			}
 		}
 		else if(c == cmdCancel) 
 		{
 			this.parent.displayDefaultView();
+			
+			this.parent.timerThread = new Timer();
+			// Don't need to refresh right now, just later
+			if(this.parent.getSettings().getRefreshRate() != 0) {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
+			}
 		}
 	}
 }

@@ -1,3 +1,4 @@
+import java.lang.*;
 import java.util.*;
 import java.lang.Math.*;
 import javax.microedition.midlet.*;
@@ -5,7 +6,9 @@ import javax.microedition.lcdui.*;
 
 public class Twitteresce extends MIDlet {
 	private TwitteresceSettings settings;
-	public TwitteresceThread displayThread;
+	
+	public Timer timerThread;
+	
 	private View defaultView;
 	
 	public TwitteresceSettings getSettings() {
@@ -21,17 +24,13 @@ public class Twitteresce extends MIDlet {
 	
 	public void startApp() {
 		if(this.settings.getInitialised()) {
-			Display display = Display.getDisplay(this);
-	
-			Alert loading = new Alert("Please wait", "Retrieving current tweets...", null, AlertType.INFO);
-			Gauge gauge = new Gauge(null, false, Gauge.INDEFINITE, Gauge.CONTINUOUS_RUNNING);
-			loading.setIndicator(gauge);
-			loading.setTimeout(1000 * 600); // Set the time out really large - once a new displayable is setup this will go away
+			this.timerThread = new Timer();
 			
-			display.setCurrent(loading);
-		
-			this.displayThread = new TwitteresceThread(this);
-			this.displayThread.start();
+			if(this.getSettings().getRefreshRate() == 0) {
+				this.timerThread.schedule(new TwitteresceThread(this), new Date());
+			} else {
+				this.timerThread.schedule(new TwitteresceThread(this), new Date(), (long)(this.getSettings().getRefreshRate() * 60 * 1000));
+			}
 		} else {
 			// no settings yet - needs to be initialised
 			SettingsView settings = new SettingsView(this);
@@ -47,6 +46,11 @@ public class Twitteresce extends MIDlet {
 	
 	public void destroyApp(boolean unconditional) {
 		this.defaultView = null;
+		try {
+			this.timerThread.cancel();
+		} catch (IllegalStateException ise) {
+		
+		}
 	}			
 	
 	public void setDefaultView(View view) {

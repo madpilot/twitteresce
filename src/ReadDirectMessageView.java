@@ -31,6 +31,12 @@ public class ReadDirectMessageView implements View, CommandListener {
 	public void commandAction(Command c, Displayable s) {
 		if (c == cmdBack) {
 			this.parent.displayDefaultView();
+			
+			this.parent.timerThread = new Timer();
+			// Don't need to refresh right now, just later
+			if(this.parent.getSettings().getRefreshRate() != 0) {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
+			}
 		}
 	}
 	

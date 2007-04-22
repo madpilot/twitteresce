@@ -1,3 +1,4 @@
+import java.lang.*;
 import java.util.*;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
@@ -10,6 +11,7 @@ public class TweetsView implements View, CommandListener {
 	private Command cmdSettings;
 	private Command cmdExit;
 	private Command cmdClose;
+	private Command cmdDirectMessage;
 	private Command cmdDirectMessages;
 	private Command cmdAbout;
 	
@@ -25,11 +27,12 @@ public class TweetsView implements View, CommandListener {
 		cmdReadTweet = new Command("Read", Command.ITEM, 1);
 		cmdUpdate = new Command("Post Tweet", Command.ITEM, 2);
 		cmdPostAt = new Command("Post at User", Command.ITEM, 3);
-		cmdDirectMessages = new Command("Direct Message User", Command.ITEM, 4);
-		cmdRefresh = new Command("Refresh", Command.ITEM, 5);
-		cmdSettings = new Command("Settings", Command.ITEM, 6);
-		cmdAbout = new Command("About", Command.ITEM, 6);
-		cmdExit = new Command("Exit", Command.ITEM, 7);
+		//cmdDirectMessage = new Command("Direct Message User", Command.ITEM, 4);
+		cmdDirectMessages = new Command("Direct Messages", Command.ITEM, 5);
+		cmdRefresh = new Command("Refresh", Command.ITEM, 6);
+		cmdSettings = new Command("Settings", Command.ITEM, 7);
+		cmdAbout = new Command("About", Command.ITEM, 8);
+		cmdExit = new Command("Exit", Command.ITEM, 9);
 		cmdClose = new Command("Close", Command.EXIT, 1);
 		
 		this.statuses = new Vector();
@@ -95,7 +98,8 @@ public class TweetsView implements View, CommandListener {
 		list.addCommand(cmdUpdate);
 		list.addCommand(cmdPostAt);
 		list.addCommand(cmdRefresh);
-		//list.addCommand(cmdDirect);
+		//list.addCommand(cmdDirectMessage);
+		list.addCommand(cmdDirectMessages);
 		list.addCommand(cmdSettings);
 		list.addCommand(cmdAbout);
 		list.addCommand(cmdExit);
@@ -104,6 +108,7 @@ public class TweetsView implements View, CommandListener {
 		list.setCommandListener(this);
 		
 		display.setCurrent(list);
+		this.parent.setDefaultView(this);
 		
 		if(newTweets > 0) {
 			Alert newTweetAlert = new Alert("New Tweets", "There are " + newTweets + " new tweets", null, AlertType.INFO);
@@ -116,8 +121,111 @@ public class TweetsView implements View, CommandListener {
 	}
 	
 	public void commandAction(Command c, Displayable s) {
+		// Read the selected tweet
+		if (c == cmdReadTweet)
+		{
+			// Stop the auto updater
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
+				
+			ReadTweetView readTweetView = new ReadTweetView(this.parent, status);
+			readTweetView.display();
+		}
+		// Display the tweet sender
+		else if (c == cmdUpdate)
+		{
+			// Stop auto updates
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			PostView postView = new PostView(this.parent);
+			postView.display();
+		}
+		// Post a message at a user
+		else if (c == cmdPostAt) 	
+		{
+			// Stop auto updates
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			PostView postView = new PostView(this.parent);
+			
+			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
+			postView.display("@" + status.getUser().getScreenName() + ": ");
+			
+		}
+		// Send a Direct Screen
+		else if (c == cmdDirectMessage) 	
+		{
+			// Stop auto updates
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			PostView postView = new PostView(this.parent);
+			
+			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
+			postView.display("D " + status.getUser().getScreenName() + " ");
+			
+		}
+		// Refresh the tweet list
+		else if (c == cmdRefresh) 
+		{
+			// Refresh the display again by creating and running a new thread (in one shot mode)
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			if(this.parent.getSettings().getRefreshRate() == 0) {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date());
+			} else {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date(), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
+			}
+		}
+		// Direct Message Screen
+		else if (c == cmdDirectMessages) {
+			// Stop the updates
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			Display display = Display.getDisplay(this.parent);
+	
+			Alert loading = new Alert("Please wait", "Retrieving direct messages...", null, AlertType.INFO);
+			Gauge gauge = new Gauge(null, false, Gauge.INDEFINITE, Gauge.CONTINUOUS_RUNNING);
+			loading.setIndicator(gauge);
+			loading.setTimeout(1000 * 600); // Set the time out really large - once a new displayable is setup this will go away
+			
+			display.setCurrent(loading);
+			
+			if(this.parent.getSettings().getRefreshRate() == 0) {
+				// Just run it
+				this.parent.timerThread.schedule(new DirectMessageThread(this.parent), new Date());
+			} else {
+				this.parent.timerThread.schedule(new DirectMessageThread(this.parent), new Date(), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
+			}
+		}
+		// Display the settings screen
+		else if (c == cmdSettings) 
+		{
+			// Stop the auto updater
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			SettingsView settings = new SettingsView(this.parent);
+			settings.display();
+		}
+		// Select the about screen
+		else if (c == cmdAbout) 
+		{
+			// Stop the auto updater
+			this.parent.timerThread.cancel();
+			this.parent.timerThread = new Timer();
+			
+			AboutView about = new AboutView(this.parent);
+			about.display();
+		}
 		// Exit the entire app
-		if (c == cmdExit) 
+		else if (c == cmdExit) 
 		{
 			this.parent.destroyApp(false);
 			this.parent.notifyDestroyed();
@@ -127,52 +235,6 @@ public class TweetsView implements View, CommandListener {
 		{
 			this.parent.pauseApp();
 			this.parent.notifyPaused();
-		}
-		// Refresh the tweet list
-		else if (c == cmdRefresh) 
-		{
-			// Refresh the display again by creating and running a new thread (in one shot mode)
-			(new TwitteresceThread(this.parent, true)).start();
-		}
-		// Display the tweet sender
-		else if (c == cmdUpdate)
-		{
-			PostView postView = new PostView(this.parent);
-			postView.display();
-		}
-		else if (c == cmdPostAt) 	
-		{
-			PostView postView = new PostView(this.parent);
-			
-			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
-			postView.display("@" + status.getUser().getScreenName() + ": ");
-			
-		}
-		// Display the settings screen
-		else if (c == cmdSettings) 
-		{
-			// Refresh the settings to make sure they aren't stale
-			try {
-				this.parent.getSettings().read();
-			} catch(javax.microedition.rms.RecordStoreException rse) {
-			
-			}
-			SettingsView settings = new SettingsView(this.parent);
-			settings.display();
-		}
-		// Read the selected tweet
-		else if (c == cmdReadTweet)
-		{
-			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
-				
-			ReadTweetView readTweetView = new ReadTweetView(this.parent, status);
-			readTweetView.display();
-		}
-		// Select the about screen
-		else if (c == cmdAbout) 
-		{
-			AboutView about = new AboutView(this.parent);
-			about.display();
 		}
 	}
 	

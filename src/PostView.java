@@ -9,7 +9,12 @@ public class PostView implements View, CommandListener {
 	private Twitteresce parent;
 	private TextBox textBox;
 	
+	// Use this so store the current screen, so we can restore it on cancel
+	View current;
+	
 	public PostView(Twitteresce parent) {
+		current = parent.getDefaultView();
+		
 		this.parent = parent;
 		cmdSend = new Command("Send", Command.ITEM, 1);
 		cmdCancel = new Command("Cancel", Command.BACK, 1);
@@ -26,6 +31,7 @@ public class PostView implements View, CommandListener {
 		textBox.setCommandListener(this);
 		
 		Display.getDisplay(this.parent).setCurrent(textBox);
+		this.parent.setDefaultView(this);
 	}
 	
 	public void display() {
@@ -37,8 +43,16 @@ public class PostView implements View, CommandListener {
 			TextBox textBox = (TextBox)s;
 			UpdateThread updateThread = new UpdateThread(textBox.getString(), this.parent);
 			updateThread.start();
+			
 		} else if (c == cmdCancel) {
-			this.parent.displayDefaultView();
+			(Display.getDisplay(this.parent)).setCurrent(current.getDisplayable());
+			this.parent.setDefaultView(current);
+			
+			this.parent.timerThread = new Timer();
+			// Don't need to refresh right now, just later
+			if(this.parent.getSettings().getRefreshRate() != 0) {
+				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
+			}
 		}
 	}
 	
