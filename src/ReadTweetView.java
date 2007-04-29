@@ -1,3 +1,4 @@
+import java.lang.*;
 import java.util.*;
 import javax.microedition.midlet.*;
 import javax.microedition.lcdui.*;
@@ -17,7 +18,7 @@ public class ReadTweetView implements View, CommandListener {
 	View current;
 	
 	public ReadTweetView(Twitteresce parent, Status status) {
-		current = parent.getDefaultView();;
+		current = parent.getDefaultView();
 		
 		this.parent = parent;
 		this.status = status;
@@ -36,7 +37,25 @@ public class ReadTweetView implements View, CommandListener {
 	}
 	
 	public void display() {
-		StringItem tweet = new StringItem(null, this.status.getText(), Item.PLAIN);
+		String timeString = "";
+		long diff = ((new Date()).getTime() - this.status.getCreatedAt().getTime()) / 1000;
+		
+		if(diff < 60) {
+			timeString = diff + " second" + (diff == 1 ? "" : "s") + " ago.";
+		} else if (diff < (60 * 60)) {
+			long mins = diff / 60;
+			timeString = "About " + mins + " minute" + (mins == 1 ? "" : "s") + " ago.";
+		} else if (diff < (24 * 60 * 60)) {
+			long hours = diff / (60 * 60);
+			timeString = "About " + hours + " hour" + (hours == 1 ? "" : "s") + " ago.";
+		} else {
+			long days = diff / (24 * 60 * 60);
+			timeString = "About " + days + " day" + (days == 1 ? "" : "s") + " ago.";
+		}
+		
+		StringItem tweet = new StringItem(null, this.status.getText() + ". " + timeString, Item.PLAIN);
+		form.deleteAll();
+		
 		form.append(tweet);
 	
 		form.addCommand(cmdPostTweet);
@@ -59,15 +78,15 @@ public class ReadTweetView implements View, CommandListener {
 		} else if (c == cmdDirectMessage) {			
 			PostView postView = new PostView(this.parent);
 			postView.display("D " + status.getUser().getScreenName() + " ");
-		} else if (c == cmdBack) {			
+		} else if (c == cmdBack) {
 			this.parent.setDefaultView(current);
 			this.parent.displayDefaultView();
 			
-			this.parent.timerThread = new Timer();
+			//this.parent.timerThread = new Timer();
 			// Don't need to refresh right now, just later
-			if(this.parent.getSettings().getRefreshRate() != 0) {
-				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
-			}
+			//if(this.parent.getSettings().getRefreshRate() != 0) {
+			//	this.parent.timerThread.schedule(new TwitteresceThread(this.parent), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
+			//}
 		}
 	}
 	

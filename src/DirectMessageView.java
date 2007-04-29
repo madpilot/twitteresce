@@ -72,6 +72,11 @@ public class DirectMessageView implements View, CommandListener {
 		this.messages = messages;
 		
 		String title = "Twitteresce - Direct Messages";
+	
+		int lastIndex = 0;
+		if(list != null) {
+			lastIndex = list.getSelectedIndex();
+		}
 		
 		list = new List(title, Choice.IMPLICIT);
 		list.setFitPolicy(Choice.TEXT_WRAP_ON);
@@ -89,6 +94,10 @@ public class DirectMessageView implements View, CommandListener {
 		this.list.addCommand(cmdBack);
 		
 		list.setCommandListener(this);
+		
+		if(newTweets == 0 && lastIndex > 0) {
+			list.setSelectedIndex(lastIndex, true);
+		}
 		
 		if(this.parent.getCurrentView().interruptible()) {
 			display.setCurrent(list);

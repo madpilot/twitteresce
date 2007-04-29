@@ -17,7 +17,7 @@ public class AboutView implements View, CommandListener {
 	
 	public void display() {
 		
-		StringItem about = new StringItem(null, "Twitteresce version 0.5\n\nBy MadPilot Productions 2007\n\nPlease check http://www.madpilot.com.au/twitteresce for updates.");
+		StringItem about = new StringItem(null, "Twitteresce version " + this.parent.getAppProperty("MIDlet-Version") + "\n\nBy MadPilot Productions 2007\n\nPlease check http://www.madpilot.com.au/twitteresce for updates.");
 		
 		form.append(about);
 		

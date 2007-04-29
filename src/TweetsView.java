@@ -90,6 +90,12 @@ public class TweetsView implements View, CommandListener {
 			title = "Twitteresce - Public";
 		}
 		
+		int lastIndex = 0;
+		
+		if(list != null) {
+			lastIndex = list.getSelectedIndex();
+		}
+		
 		list = new List(title, Choice.IMPLICIT);
 		list.setFitPolicy(Choice.TEXT_WRAP_ON);
 		
@@ -112,6 +118,10 @@ public class TweetsView implements View, CommandListener {
 		list.addCommand(cmdClose);
 		
 		list.setCommandListener(this);
+		
+		if(newTweets == 0 && lastIndex > 0) {
+			list.setSelectedIndex(lastIndex, true);
+		}
 		
 		if(this.parent.getCurrentView().interruptible()) {
 			display.setCurrent(list);

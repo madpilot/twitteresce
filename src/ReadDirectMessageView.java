@@ -22,8 +22,25 @@ public class ReadDirectMessageView implements View, CommandListener {
 	}
 	
 	public void display() {
+		String timeString = "";
+		long diff = ((new Date()).getTime() - this.message.getCreatedAt().getTime()) / 1000;
+		
+		if(diff < 60) {
+			timeString = diff + " second" + (diff == 1 ? "" : "s") + " ago.";
+		} else if (diff < (60 * 60)) {
+			long mins = diff / 60;
+			timeString = "About " + mins + " minute" + (mins == 1 ? "" : "s") + " ago.";
+		} else if (diff < (24 * 60 * 60)) {
+			long hours = diff / (60 * 60);
+			timeString = "About " + hours + " hour" + (hours == 1 ? "" : "s") + " ago.";
+		} else {
+			long days = diff / (24 * 60 * 60);
+			timeString = "About " + days + " day" + (days == 1 ? "" : "s") + " ago.";
+		}
+		
 		this.parent.setCurrentView(this);
-		StringItem tweet = new StringItem(null, this.message.getText(), Item.PLAIN);
+		StringItem tweet = new StringItem(null, this.message.getText() + ". " + timeString, Item.PLAIN);
+		form.deleteAll();
 		form.append(tweet);
 	
 		form.addCommand(cmdBack);
