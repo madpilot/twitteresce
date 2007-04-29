@@ -31,6 +31,10 @@ public class ReadTweetView implements View, CommandListener {
 		this.parent.setDefaultView(this);
 	}
 	
+	public boolean interruptible() {
+		return false;
+	}
+	
 	public void display() {
 		StringItem tweet = new StringItem(null, this.status.getText(), Item.PLAIN);
 		form.append(tweet);
@@ -56,8 +60,8 @@ public class ReadTweetView implements View, CommandListener {
 			PostView postView = new PostView(this.parent);
 			postView.display("D " + status.getUser().getScreenName() + " ");
 		} else if (c == cmdBack) {			
-			(Display.getDisplay(this.parent)).setCurrent(current.getDisplayable());
 			this.parent.setDefaultView(current);
+			this.parent.displayDefaultView();
 			
 			this.parent.timerThread = new Timer();
 			// Don't need to refresh right now, just later

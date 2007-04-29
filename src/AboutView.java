@@ -17,7 +17,7 @@ public class AboutView implements View, CommandListener {
 	
 	public void display() {
 		
-		StringItem about = new StringItem(null, "Twitteresce version 0.4\n\nBy MadPilot Productions 2007\n\nPlease check http://www.madpilot.com.au/twitteresce for updates.");
+		StringItem about = new StringItem(null, "Twitteresce version 0.5\n\nBy MadPilot Productions 2007\n\nPlease check http://www.madpilot.com.au/twitteresce for updates.");
 		
 		form.append(about);
 		
@@ -26,6 +26,10 @@ public class AboutView implements View, CommandListener {
 		form.setCommandListener(this);
 		
 		Display.getDisplay(this.parent).setCurrent(form);
+	}
+	
+	public boolean interruptible() {
+		return false;
 	}
 	
 	public Displayable getDisplayable() {

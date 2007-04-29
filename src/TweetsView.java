@@ -46,11 +46,17 @@ public class TweetsView implements View, CommandListener {
 		this.list.addCommand(cmdClose);
 	}
 	
+	public boolean interruptible() {
+		return true;
+	}
+	
 	public void display() {
 		this.display(this.statuses);
 	}
 	
 	public void display(Vector statuses) {
+		this.parent.setCurrentView(this);
+		
 		Display display = Display.getDisplay(this.parent);
 		
 		// First we will check to see if it there are new tweets
@@ -107,15 +113,17 @@ public class TweetsView implements View, CommandListener {
 		
 		list.setCommandListener(this);
 		
-		display.setCurrent(list);
-		this.parent.setDefaultView(this);
-		
-		if(newTweets > 0) {
-			Alert newTweetAlert = new Alert("New Tweets", "There are " + newTweets + " new tweets", null, AlertType.INFO);
-			try {
-				display.setCurrent(newTweetAlert, list);
-			} catch(IllegalArgumentException iae) {
+		if(this.parent.getCurrentView().interruptible()) {
+			display.setCurrent(list);
+			this.parent.setDefaultView(this);
 			
+			if(newTweets > 0) {
+				Alert newTweetAlert = new Alert("New Tweets", "There are " + newTweets + " new tweets", null, AlertType.INFO);
+				try {
+					display.setCurrent(newTweetAlert, list);
+				} catch(IllegalArgumentException iae) {
+				
+				}
 			}
 		}
 	}
@@ -124,32 +132,20 @@ public class TweetsView implements View, CommandListener {
 		// Read the selected tweet
 		if (c == cmdReadTweet)
 		{
-			// Stop the auto updater
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
-				
+
 			ReadTweetView readTweetView = new ReadTweetView(this.parent, status);
 			readTweetView.display();
 		}
 		// Display the tweet sender
 		else if (c == cmdUpdate)
 		{
-			// Stop auto updates
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			PostView postView = new PostView(this.parent);
 			postView.display();
 		}
 		// Post a message at a user
 		else if (c == cmdPostAt) 	
 		{
-			// Stop auto updates
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			PostView postView = new PostView(this.parent);
 			
 			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
@@ -159,10 +155,6 @@ public class TweetsView implements View, CommandListener {
 		// Send a Direct Screen
 		else if (c == cmdDirectMessage) 	
 		{
-			// Stop auto updates
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			PostView postView = new PostView(this.parent);
 			
 			Status status = (Status)statuses.elementAt(list.getSelectedIndex());
@@ -172,7 +164,6 @@ public class TweetsView implements View, CommandListener {
 		// Refresh the tweet list
 		else if (c == cmdRefresh) 
 		{
-			// Refresh the display again by creating and running a new thread (in one shot mode)
 			this.parent.timerThread.cancel();
 			this.parent.timerThread = new Timer();
 			
@@ -184,7 +175,7 @@ public class TweetsView implements View, CommandListener {
 		}
 		// Direct Message Screen
 		else if (c == cmdDirectMessages) {
-			// Stop the updates
+			// Refresh the display again by creating and running a new thread (in one shot mode)
 			this.parent.timerThread.cancel();
 			this.parent.timerThread = new Timer();
 			
@@ -207,20 +198,12 @@ public class TweetsView implements View, CommandListener {
 		// Display the settings screen
 		else if (c == cmdSettings) 
 		{
-			// Stop the auto updater
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			SettingsView settings = new SettingsView(this.parent);
 			settings.display();
 		}
 		// Select the about screen
 		else if (c == cmdAbout) 
 		{
-			// Stop the auto updater
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			AboutView about = new AboutView(this.parent);
 			about.display();
 		}

@@ -39,8 +39,12 @@ public class DirectMessageThread extends TimerTask  {
 			} catch (ClassCastException cce) {
 				directMessageView = new DirectMessageView(this.parent);
 			}
-			directMessageView.display(messages);
-			this.parent.setDefaultView(directMessageView);
+
+			if(this.parent.getCurrentView().interruptible()) {
+				directMessageView.display(messages);
+				this.parent.setDefaultView(directMessageView);
+				this.parent.setCurrentView(directMessageView);
+			}
 		}
 		catch(HTTPIOException hie) 
 		{
@@ -78,7 +82,7 @@ public class DirectMessageThread extends TimerTask  {
 	public void run() 
 	{
 		// Always show the gauge on the first run
-		if(this.firstRun) {
+		if(this.firstRun && this.parent.getCurrentView().interruptible()) {
 			this.parent.displayDefaultView();
 				
 			Alert refreshing = new Alert("Please wait", "Retrieving direct messages...", null, AlertType.INFO);

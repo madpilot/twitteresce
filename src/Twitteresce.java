@@ -10,6 +10,7 @@ public class Twitteresce extends MIDlet {
 	public Timer timerThread;
 	
 	private View defaultView;
+	private View currentView;
 	
 	public TwitteresceSettings getSettings() {
 		return this.settings;
@@ -20,6 +21,7 @@ public class Twitteresce extends MIDlet {
 				
 		// Initialise some variables so if there are errors, we can display stuff
 		this.defaultView = new TweetsView(this);
+		this.currentView = this.defaultView;
 	}
 	
 	public void startApp() {
@@ -46,6 +48,8 @@ public class Twitteresce extends MIDlet {
 	
 	public void destroyApp(boolean unconditional) {
 		this.defaultView = null;
+		this.currentView = null;
+		
 		try {
 			this.timerThread.cancel();
 		} catch (IllegalStateException ise) {
@@ -57,11 +61,20 @@ public class Twitteresce extends MIDlet {
 		this.defaultView = view;
 	}
 	
+	public View getCurrentView() {
+		return this.currentView;
+	}
+	
+	public void setCurrentView(View view) {
+		this.currentView = view;
+	}
+	
 	public View getDefaultView() {
 		return this.defaultView;
 	}
 	
 	public void displayDefaultView() {
 		this.defaultView.display();
+		this.currentView = this.defaultView;
 	}
 }

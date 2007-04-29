@@ -17,7 +17,12 @@ public class SettingsView implements View, CommandListener {
 		cmdCancel = new Command("Cancel", Command.BACK, 1);
 	}
 	
-	public void display() {		
+	public boolean interruptible() {
+		return false;
+	}
+	
+	public void display() {
+		this.parent.setCurrentView(this);
 		// Item #0
 		TextField txtUsername = new TextField("Username", this.parent.getSettings().getUsername(), 255, TextField.ANY);
 		// Item #1
@@ -147,7 +152,9 @@ public class SettingsView implements View, CommandListener {
 		{
 			this.save((Form)s);
 			
+			this.parent.timerThread.cancel();
 			this.parent.timerThread = new Timer();
+			
 			// Restart the timer if the refresh rate has been changed
 			if(this.parent.getSettings().getRefreshRate() == 0) {
 				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date());
@@ -158,12 +165,6 @@ public class SettingsView implements View, CommandListener {
 		else if(c == cmdCancel) 
 		{
 			this.parent.displayDefaultView();
-			
-			this.parent.timerThread = new Timer();
-			// Don't need to refresh right now, just later
-			if(this.parent.getSettings().getRefreshRate() != 0) {
-				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
-			}
 		}
 	}
 }

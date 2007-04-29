@@ -15,7 +15,10 @@ public class DirectMessageView implements View, CommandListener {
 	
 	private List list;
 	
+	private View current;
+	
 	public DirectMessageView(Twitteresce parent) {
+		this.current = parent.getDefaultView();
 		this.parent = parent;
 		
 		cmdReadMessage = new Command("Read", Command.ITEM, 1);
@@ -32,7 +35,12 @@ public class DirectMessageView implements View, CommandListener {
 		this.list.addCommand(cmdBack);
 	}
 	
+	public boolean interruptible() {
+		return true;
+	}
+	
 	public void display() {
+		this.parent.setCurrentView(this);
 		this.display(this.messages);
 	}
 	
@@ -82,15 +90,17 @@ public class DirectMessageView implements View, CommandListener {
 		
 		list.setCommandListener(this);
 		
-		display.setCurrent(list);
-		this.parent.setDefaultView(this);
-		
-		if(newTweets > 0) {
-			Alert newTweetAlert = new Alert("New Messages", "There are " + newTweets + " new messages", null, AlertType.INFO);
-			try {
-				display.setCurrent(newTweetAlert, list);
-			} catch(IllegalArgumentException iae) {
+		if(this.parent.getCurrentView().interruptible()) {
+			display.setCurrent(list);
+			this.parent.setDefaultView(this);
 			
+			if(newTweets > 0) {
+				Alert newTweetAlert = new Alert("New Messages", "There are " + newTweets + " new messages", null, AlertType.INFO);
+				try {
+					display.setCurrent(newTweetAlert, list);
+				} catch(IllegalArgumentException iae) {
+				
+				}
 			}
 		}
 	}
@@ -99,30 +109,28 @@ public class DirectMessageView implements View, CommandListener {
 		// Just close the app - it's still open, but hidden
 		if (c == cmdBack) 
 		{
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
+			this.parent.setDefaultView(this.current);
 			Display display = Display.getDisplay(this.parent);
+			this.parent.displayDefaultView();
 	
+			/*
 			Alert loading = new Alert("Please wait", "Retrieving current tweets...", null, AlertType.INFO);
 			Gauge gauge = new Gauge(null, false, Gauge.INDEFINITE, Gauge.CONTINUOUS_RUNNING);
 			loading.setIndicator(gauge);
 			loading.setTimeout(1000 * 600); // Set the time out really large - once a new displayable is setup this will go away
 			
-			display.setCurrent(loading);
-			
-			if(this.parent.getSettings().getRefreshRate() == 0) {
+			if(this.parent.getSettings().getRefreshRate() != 0) {
 				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date());
 			} else {
 				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), new Date(), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
 			}
+			
+			display.setCurrent(loading);
+			*/
 		}
 		// Read the selected tweet
 		else if (c == cmdReadMessage)
 		{
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			DirectMessage message = (DirectMessage)messages.elementAt(list.getSelectedIndex());
 				
 			ReadDirectMessageView readDirectMessage = new ReadDirectMessageView(this.parent, message);
@@ -144,9 +152,6 @@ public class DirectMessageView implements View, CommandListener {
 		// Post a message at a user
 		else if (c == cmdDirectMessage) 	
 		{
-			this.parent.timerThread.cancel();
-			this.parent.timerThread = new Timer();
-			
 			PostView postView = new PostView(this.parent);
 			
 			DirectMessage message = (DirectMessage)messages.elementAt(list.getSelectedIndex());

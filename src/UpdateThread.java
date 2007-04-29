@@ -45,6 +45,7 @@ public class UpdateThread extends Thread  {
 			
 			// Refresh the timeline
 			this.parent.displayDefaultView();
+			
 			this.parent.timerThread = new Timer();
 			
 			if(this.parent.getSettings().getRefreshRate() == 0) {

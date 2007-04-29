@@ -32,8 +32,12 @@ public class TwitteresceThread extends TimerTask  {
 				} catch (ClassCastException cce) {
 					tweetsView = new TweetsView(this.parent);
 				}
-				tweetsView.display(statuses);
-				this.parent.setDefaultView(tweetsView);
+				
+				if(this.parent.getCurrentView().interruptible()) {
+					tweetsView.display(statuses);
+					this.parent.setDefaultView(tweetsView);
+					this.parent.displayDefaultView();
+				}
 			} 
 			else if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_PUBLIC) 
 			{
@@ -44,8 +48,12 @@ public class TwitteresceThread extends TimerTask  {
 				} catch (ClassCastException cce) {
 					tweetsView = new TweetsView(this.parent);
 				}
-				tweetsView.display(statuses);
-				this.parent.setDefaultView(tweetsView);
+				
+				if(this.parent.getCurrentView().interruptible()) {
+					tweetsView.display(statuses);
+					this.parent.setDefaultView(tweetsView);
+					this.parent.displayDefaultView();
+				}
 			}
 		}
 		catch(HTTPIOException hie) 
@@ -83,7 +91,7 @@ public class TwitteresceThread extends TimerTask  {
 		
 	public void run() 
 	{		
-		if(this.firstRun) {
+		if(this.firstRun && this.parent.getCurrentView().interruptible()) {
 			// Always show the gauge on the first run
 			this.parent.displayDefaultView();
 		

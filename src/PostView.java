@@ -22,7 +22,12 @@ public class PostView implements View, CommandListener {
 		textBox = new TextBox("Enter your message", "", 140, TextField.ANY);
 	}
 	
+	public boolean interruptible() {
+		return false;
+	}
+	
 	public void display(String initial) {
+		this.parent.setCurrentView(this);
 		this.textBox.setString(initial);
 				
 		textBox.addCommand(cmdSend);
@@ -40,19 +45,15 @@ public class PostView implements View, CommandListener {
 	
 	public void commandAction(Command c, Displayable s) {
 		if(c == cmdSend) {
+			this.parent.setDefaultView(this.current);
 			TextBox textBox = (TextBox)s;
+			
 			UpdateThread updateThread = new UpdateThread(textBox.getString(), this.parent);
 			updateThread.start();
 			
 		} else if (c == cmdCancel) {
-			(Display.getDisplay(this.parent)).setCurrent(current.getDisplayable());
 			this.parent.setDefaultView(current);
-			
-			this.parent.timerThread = new Timer();
-			// Don't need to refresh right now, just later
-			if(this.parent.getSettings().getRefreshRate() != 0) {
-				this.parent.timerThread.schedule(new TwitteresceThread(this.parent), (long)(this.parent.getSettings().getRefreshRate() * 60 * 1000));
-			}
+			this.parent.displayDefaultView();
 		}
 	}
 	
