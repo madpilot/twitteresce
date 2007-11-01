@@ -85,7 +85,7 @@ public class TweetsView implements View, CommandListener {
 		
 		String title = "Twitteresce";
 		if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_FRIENDS) {
-			title = "Twitteresce - Friends";
+			title = "Twitteresce - Following";
 		} else if (this.parent.getSettings().getTimelineMode() == TwitteresceSettings.MODE_PUBLIC) {
 			title = "Twitteresce - Public";
 		}

@@ -39,7 +39,7 @@ public class ReadDirectMessageView implements View, CommandListener {
 		}
 		
 		this.parent.setCurrentView(this);
-		StringItem tweet = new StringItem(null, this.message.getText() + ". " + timeString, Item.PLAIN);
+		StringItem tweet = new StringItem(null, this.message.getText(), Item.PLAIN);
 		form.deleteAll();
 		form.append(tweet);
 	

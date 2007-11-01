@@ -36,6 +36,7 @@ public class Status {
 					// This is actually pretty in accurate, but we are only going to use an estimate
 					// so that is ok.
 					// Day MMM dd hh:mm:ss +zzzz yyyy
+					
 					String date = child.getText(0);
 					
 					int year = Integer.parseInt(date.substring("Day MMM dd hh:mm:ss +zzzz ".length(), "Day MMM dd hh:mm:ss +zzzz yyyy".length()));

@@ -144,6 +144,11 @@ public class TwitterAPI {
 		if(authenticate) {
 			c.setRequestProperty("Authorization", "Basic " + Base64.Encode(this.username + ":" + this.password));
 		}
+		
+		c.setRequestProperty("X-Twitter-Client", "Twitteresce");
+		//c.setRequestProperty("X-Twitter-Client-Version", getAppProperty("MIDlet-Version").toString());
+		c.setRequestProperty("X-Twitter-Client-URL", "http://www.madpilot.com.au/twitteresce/meta.xml");
+		
 		c.setRequestMethod(HttpConnection.POST);
 		
 		os = c.openOutputStream();

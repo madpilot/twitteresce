@@ -53,7 +53,7 @@ public class ReadTweetView implements View, CommandListener {
 			timeString = "About " + days + " day" + (days == 1 ? "" : "s") + " ago.";
 		}
 		
-		StringItem tweet = new StringItem(null, this.status.getText() + ". " + timeString, Item.PLAIN);
+		StringItem tweet = new StringItem(null, this.status.getText(), Item.PLAIN);
 		form.deleteAll();
 		
 		form.append(tweet);
