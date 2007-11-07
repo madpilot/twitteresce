@@ -183,7 +183,11 @@ public class TwitterAPI {
 	}
 	
 	public void Update(String message) throws HTTPIOException, IOException {
-		Post("http://twitter.com/statuses/update.xml?status=" + URLEncoder.encode(message), "", true);
+		Post("http://twitter.com/statuses/update.xml?status=" + URLEncoder.encode(message), "&source=twitteresce", true);
+	}
+	
+	public void DestroyStatus(int id) throws HTTPIOException, IOException {
+		Get("http://twitter.com/statuses/destroy/" + id + ".xml", true);
 	}
 	
 	public Vector Friends() throws HTTPIOException, IOException {
@@ -206,11 +210,19 @@ public class TwitterAPI {
 		return Get("http://twitter.com/direct_messages.xml", true);
 	}
 	
+	public Vector SentDirectMessages() throws HTTPIOException, IOException {
+		return Get("http://twitter.com/direct_messages/sent.xml", true);
+	}
+	
 	public void NewDirectMessage(int id, String message) throws HTTPIOException, IOException {
-		Post("http://twitter.com/direct_messages/new.xml&user=" + id + "&text=" + URLEncoder.encode(message), "", true);
+		Post("http://twitter.com/direct_messages/new.xml&user=" + id + "&text=" + URLEncoder.encode(message), "&source=twitteresce", true);
 	}
 	
 	public void NewDirectMessage(String username, String message) throws HTTPIOException, IOException {
-		Post("http://twitter.com/direct_messages/new.xml&user=" + username + "&text=" + URLEncoder.encode(message), "", true);
+		Post("http://twitter.com/direct_messages/new.xml&user=" + username + "&text=" + URLEncoder.encode(message), "&source=twitteresce", true);
+	}
+	
+	public void DestroyDirectMessage(int id) throws HTTPIOException, IOException {
+		Get("http://twitter.com/direct_messages/destroy/" + id + ".xml", true);
 	}
 }

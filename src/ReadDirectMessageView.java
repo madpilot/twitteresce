@@ -4,6 +4,8 @@ import javax.microedition.lcdui.*;
 
 public class ReadDirectMessageView implements View, CommandListener {
 	private Command cmdBack;
+	private Command cmdReply;
+	private Command cmdDelete;
 	
 	private Twitteresce parent;
 	private DirectMessage message;
@@ -13,6 +15,8 @@ public class ReadDirectMessageView implements View, CommandListener {
 		this.parent = parent;
 		this.message = message;
 		
+		cmdReply = new Command("Reply", Command.ITEM, 1);
+		cmdDelete = new Command("Delete Message", Command.ITEM, 2);
 		cmdBack = new Command("Back", Command.BACK, 1);
 		this.form = new Form("Direct message from " + this.message.getSenderScreenName());
 	}
@@ -43,6 +47,8 @@ public class ReadDirectMessageView implements View, CommandListener {
 		form.deleteAll();
 		form.append(tweet);
 	
+		form.addCommand(cmdReply);
+		form.addCommand(cmdDelete);
 		form.addCommand(cmdBack);
 	
 		form.setCommandListener(this);
@@ -51,7 +57,14 @@ public class ReadDirectMessageView implements View, CommandListener {
 	}
 	
 	public void commandAction(Command c, Displayable s) {
-		if (c == cmdBack) {
+		if (c == cmdReply) {
+			PostView postView = new PostView(this.parent);
+			postView.display("D " + this.message.getSenderScreenName() + " ");
+		} else if(c == cmdDelete) {
+			DeleteDirectMessageThread deleteDirectMessageThread = new DeleteDirectMessageThread(this.message.getID(), this.parent);
+			deleteDirectMessageThread.start();
+			this.parent.displayDefaultView();
+		} else if (c == cmdBack) {
 			this.parent.displayDefaultView();
 		}
 	}

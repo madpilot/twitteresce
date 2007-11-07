@@ -163,8 +163,12 @@ public class DirectMessageView implements View, CommandListener {
 		{
 			PostView postView = new PostView(this.parent);
 			
-			DirectMessage message = (DirectMessage)messages.elementAt(list.getSelectedIndex());
-			postView.display("D " + message.getSenderScreenName() + " ");
+			if(list.getSelectedIndex() == -1) {
+				postView.display("D ");
+			} else {
+				DirectMessage message = (DirectMessage)messages.elementAt(list.getSelectedIndex());
+				postView.display("D " + message.getSenderScreenName() + " ");
+			}
 		}
 	}
 	

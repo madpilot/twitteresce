@@ -8,6 +8,7 @@ public class ReadTweetView implements View, CommandListener {
 	private Command cmdPostTweet;
 	private Command cmdPostAtUser;
 	private Command cmdDirectMessage;
+	private Command cmdDeleteTweet;
 	
 	private Twitteresce parent;
 	private Status status;
@@ -26,6 +27,7 @@ public class ReadTweetView implements View, CommandListener {
 		cmdPostTweet = new Command("Post Tweet", Command.ITEM, 1);
 		cmdPostAtUser = new Command("Post at User", Command.ITEM, 2);
 		cmdDirectMessage = new Command("Direct Message User", Command.ITEM, 3);
+		cmdDeleteTweet = new Command("Delete Tweet", Command.ITEM, 4);
 		
 		cmdBack = new Command("Back", Command.BACK, 1);
 		form = new Form("Update from " + this.status.getUser().getScreenName());
@@ -61,6 +63,10 @@ public class ReadTweetView implements View, CommandListener {
 		form.addCommand(cmdPostTweet);
 		form.addCommand(cmdPostAtUser);
 		form.addCommand(cmdDirectMessage);
+		
+		if(this.status.getUser().getScreenName().equals(this.parent.getSettings().getUsername())) {
+			form.addCommand(cmdDeleteTweet);
+		}
 		form.addCommand(cmdBack);
 			
 		form.setCommandListener(this);
@@ -78,6 +84,11 @@ public class ReadTweetView implements View, CommandListener {
 		} else if (c == cmdDirectMessage) {			
 			PostView postView = new PostView(this.parent);
 			postView.display("D " + status.getUser().getScreenName() + " ");
+		} else if (c == cmdDeleteTweet) {
+			this.parent.setDefaultView(current);
+			DeleteThread deleteThread = new DeleteThread(status.getID(), this.parent);
+			deleteThread.start();
+			this.parent.displayDefaultView();
 		} else if (c == cmdBack) {
 			this.parent.setDefaultView(current);
 			this.parent.displayDefaultView();
